@@ -17,6 +17,6 @@ class NewUser extends User {
          password: password,
          email: email,
          phoneNumber: phoneNumber,
-         userId: Uuid().v4(), // יוצרת מזהה ייחודי חדש
+         userId: Uuid().v4(), // Generate a unique user ID
        );
 }

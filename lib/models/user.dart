@@ -1,15 +1,20 @@
-// ignore: file_names
+// lib/models/user.dart
+// this is the base user class for all users in the app
+// it contains common properties like username, password, email, and phoneNumber
 
-class Userclass {
+abstract class User {
+  // common properties for all users
   late String username;
   late String password;
   late String email;
   late String phoneNumber;
+  late String userId;
 
-  Userclass({
+  User({
     required this.username,
     required this.password,
     required this.email,
     required this.phoneNumber,
+    required this.userId,
   });
 }
