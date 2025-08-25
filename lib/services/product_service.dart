@@ -20,5 +20,14 @@ class ProductService {
 
   //The updateProduct function partially updates a document in Firebase by changing
   // the description field of a specific product without deleting its other data.
-  Future<void> updateProduct(String productId, String newDescription) {}
+  Future<void> updateProduct(String productId, String newDescription) async {
+    try {
+      await productsCollection.doc(productId).update({
+        'description': newDescription,
+      });
+      print('Product updated successfully!');
+    } catch (e) {
+      print('Error updating product: $e');
+    }
+  }
 }
