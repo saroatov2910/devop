@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:devop/models/products/product.dart';
 import 'package:flutter/material.dart';
 import 'package:your_app_name/models/products/product.dart';
@@ -14,4 +12,16 @@ class ProductListTile extends StatefulWidget {
     required this.product,
     required this.onTap ;
   });
+
+   @override
+  Widget build(BuildContext context) {
+    return  Container(
+      //Add vertical margin to product list tile
+      margin: const EdgeInsets.symmetric(vertical: 6),
+    );
+  }
+
+
+
+
 }
