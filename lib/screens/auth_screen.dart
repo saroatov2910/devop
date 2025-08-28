@@ -52,12 +52,13 @@ class _AuthScreenState extends State<AuthScreen> {
           email: _emailController.text.trim(),
           phoneNumber: _phoneController.text.trim(),
         );
-        if (!@override
-        bool get mounted {
-          
-        })
+        if (!mounted) return; // mounted check
         setState(() => showLogin = true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Registration successful")),
+        );
       } catch (e) {
+        if (!mounted) return; // mounted check
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(e.toString())));
@@ -101,7 +102,9 @@ class _AuthScreenState extends State<AuthScreen> {
             },
           ),
           Container(
-            color: Colors.white.withOpacity(0.8),
+            color: Colors.white.withAlpha(
+              (0.8 * 255).toInt(),
+            ), // fixed deprecated withOpacity
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: showLogin ? _buildLoginForm() : _buildRegisterForm(),
