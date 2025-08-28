@@ -1,48 +1,32 @@
-import 'package:devop/models/products/product.dart';
+// lib/widgets/product_list_tile.dart
 import 'package:flutter/material.dart';
+import '../models/products/product.dart';
 
-class ProductListTile extends StatefulWidget {
+class ProductListTile extends StatelessWidget {
   final Product product;
-  //feat: Add tap functionality to list tile
   final VoidCallback onTap;
 
-
-  const ProductListTile ({
+  const ProductListTile({
     super.key,
     required this.product,
-    required this.onTap ;
+    required this.onTap,
   });
 
-   @override
+  @override
   Widget build(BuildContext context) {
-    return  Container(
-      //Add vertical margin to product list tile
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      decoration: BoxDecoration(
-        color:product.cheked ?Colors.white[700] :Color.grey[200],
-        border:Radius.circular(12)
+    return ListTile(
+      leading: Icon(product.icon),
+      title: Text(product.nameProduct),
+      subtitle: Text(product.description),
+      trailing: Checkbox(
+        value: product.checked,
+        onChanged: (bool? newValue) {
+          if (newValue != null) {
+            onTap();
+          }
+        },
       ),
-          title: Text(
-          product.nameProduct,
-          style: TextStyle(
-          color: product.checked ? Colors.white : Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-          subtitle: Text(
-          product.description,
-          style: TextStyle(
-            color: product.checked ? Colors.white70 : Colors.black54,
-          ),
-        ),
-          trailing: product.checked
-            ? const Icon(Icons.check_box, color: Colors.white)
-            : const Icon(Icons.check_box_outline_blank),
-        onTap: onTap,
+      onTap: onTap,
     );
   }
-
-
-
-
 }
