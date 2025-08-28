@@ -26,5 +26,12 @@ class Product {
 
   Color getExpirationColor() {
     final now = DateTime.now();
+    if (expirationDate.isBefore(now)) {
+      return Colors.red;
+    } else if (expirationDate.difference(now).inDays <= 3) {
+      return Colors.yellow;
+    } else {
+      return Colors.green;
+    }
   }
 }
