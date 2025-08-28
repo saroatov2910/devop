@@ -24,5 +24,7 @@ class Product {
     this.checked = false,
   });
 
-  Color getExpirationColor() {}
+  Color getExpirationColor() {
+    final now = DateTime.now();
+  }
 }
