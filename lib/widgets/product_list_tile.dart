@@ -16,14 +16,22 @@ class ProductListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: Icon(product.icon),
-      title: Text(product.nameProduct),
-      subtitle: Text(product.description),
+      title: Text(product.name),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(product.description),
+          Text("ID: ${product.id}"),
+          Text("Barcode: ${product.barcode}"), // barcode
+          Text(
+            "Expires:${product.expirationDate.toLocal().toString().split(' ')[0]}",
+          ),
+        ],
+      ),
       trailing: Checkbox(
         value: product.checked,
-        onChanged: (bool? newValue) {
-          if (newValue != null) {
-            onTap();
-          }
+        onChanged: (bool? value) {
+          onTap();
         },
       ),
       onTap: onTap,
