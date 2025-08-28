@@ -52,6 +52,10 @@ class _AuthScreenState extends State<AuthScreen> {
           email: _emailController.text.trim(),
           phoneNumber: _phoneController.text.trim(),
         );
+        if (!@override
+        bool get mounted {
+          
+        })
         setState(() => showLogin = true);
       } catch (e) {
         ScaffoldMessenger.of(
