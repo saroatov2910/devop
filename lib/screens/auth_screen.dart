@@ -3,6 +3,7 @@ import '../services/auth_service.dart';
 import '../services/product_service.dart';
 import '../models/products/product.dart';
 import '../widgets/product_list_tile.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -52,16 +53,24 @@ class _AuthScreenState extends State<AuthScreen> {
           email: _emailController.text.trim(),
           phoneNumber: _phoneController.text.trim(),
         );
+
         if (!mounted) return; // mounted check
         setState(() => showLogin = true);
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Registration successful")),
         );
+      } on FirebaseAuthException catch (e) {
+        if (!mounted) return;
+        // Show the exact Firebase error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message ?? "Registration error")),
+        );
       } catch (e) {
-        if (!mounted) return; // mounted check
+        if (!mounted) return;
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
+        ).showSnackBar(SnackBar(content: Text("Unexpected error: $e")));
       }
     }
   }
