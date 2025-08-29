@@ -62,7 +62,14 @@ class ProductService {
       final DocumentSnapshot = await Firebase 
       .collection('products')
       .doc(barcode)
-          .get();
+      .get();
+
+      if (DocumentSnapshot.exists && DocumentSnapshot.data()!containsKey('count'))){
+
+      }else{
+        rerun count
+      }
+
 
 
 
