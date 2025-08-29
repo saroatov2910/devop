@@ -21,10 +21,7 @@ class BottomNav extends StatelessWidget {
         BottomBarWithSheetItem(icon: Icons.home, label: 'Home'),
         BottomBarWithSheetItem(icon: Icons.person, label: 'Profile'),
         BottomBarWithSheetItem(icon: Icons.settings, label: 'Settings'),
-        // BottomBarWithSheetItem(icon: Icons.product, label: 'Product'),
-        // BottomBarWithSheetItem(icon: Icons.settings, label: 'SuperMarket'),
-        // BottomBarWithSheetItem(icon: Icons.Ai, label: 'Ai '),
-        // BottomBarWithSheetItem(icon: Icons.settings, label: 'Settings'),
+        BottomBarWithSheetItem(icon: Icons.psychology_alt, label: 'AI'),
       ],
       onSelectItem: (index) {
         onItemTap(index);
