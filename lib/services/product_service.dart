@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import '../models/products/product.dart';
 
@@ -55,10 +56,15 @@ class ProductService {
     }
   }
 
-    Future <int> getProductCounter(String barcode)async{
+  Future<int> getProductCount(String barcode) async {
     try{
+      final DocumentSnapshot = await Firebase 
+      .collection('products')
+      .doc(barcode)
+          .get();
 
-    final docSnapshot =wait FirebaseFirestore
+          
+
 
     }
   }
