@@ -57,13 +57,14 @@ class ProductService {
   }
 
   Future<int> getProductCount(String barcode) async {
+    int count=0;
     try{
       final DocumentSnapshot = await Firebase 
       .collection('products')
       .doc(barcode)
           .get();
 
-          
+
 
 
     }
