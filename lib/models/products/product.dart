@@ -1,7 +1,3 @@
-// lib/models/products/product.dart
-// this class represents a product in the app
-// it contains properties like id, nameProduct, description, etc.
-
 import 'package:flutter/material.dart';
 
 class Product {
@@ -11,8 +7,8 @@ class Product {
   final String barcode;
   final IconData icon;
   final DateTime expirationDate;
-
-  bool checked;
+  final bool checked;
+  final String category;
 
   Product({
     required this.id,
@@ -21,17 +17,14 @@ class Product {
     required this.barcode,
     required this.icon,
     required this.expirationDate,
+    required this.category,
     this.checked = false,
   });
 
   Color getExpirationColor() {
     final now = DateTime.now();
-    if (expirationDate.isBefore(now)) {
-      return Colors.red;
-    } else if (expirationDate.difference(now).inDays <= 3) {
-      return Colors.yellow;
-    } else {
-      return Colors.green;
-    }
+    if (expirationDate.isBefore(now)) return Colors.red;
+    if (expirationDate.difference(now).inDays <= 3) return Colors.yellow;
+    return Colors.green;
   }
 }
