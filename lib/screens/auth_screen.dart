@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
-import '../services/product_service.dart';
-import '../models/products/product.dart';
-import '../widgets/product_list_tile.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'login_screen.dart';
+import 'register_screen.dart';
+import '../services/register_user.dart';
+import '../services/sign_in_user.dart';
+import '../models/new_user.dart';
+import 'home_screen.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -13,176 +14,132 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  final AuthService authService = AuthService();
-  final ProductService productService = ProductService();
   bool showLogin = true;
+  bool isLoading = false;
 
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
+  final loginFormKey = GlobalKey<FormState>();
+  final registerFormKey = GlobalKey<FormState>();
 
-  void _login() async {
+  final loginEmailController = TextEditingController();
+  final loginPasswordController = TextEditingController();
+
+  final registerEmailController = TextEditingController();
+  final registerPasswordController = TextEditingController();
+  final registerUsernameController = TextEditingController();
+  final registerPhoneController = TextEditingController();
+
+  void toggleForm() {
+    setState(() {
+      showLogin = !showLogin;
+    });
+  }
+
+  Future<void> handleLogin() async {
+    if (!loginFormKey.currentState!.validate()) return;
+    setState(() => isLoading = true);
     try {
-      await authService.signIn(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+      final user = await signInUser(
+        email: loginEmailController.text.trim(),
+        password: loginPasswordController.text.trim(),
       );
-      // Added mounted check ✅
-      // Prevents calling ScaffoldMessenger or other context-dependent code
-      // if the widget has been removed from the widget tree while async code is still running
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Login successful")));
+      if (user != null) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => HomeScreen(userEmail: user.email ?? "User"),
+          ),
+        );
+      }
     } catch (e) {
-      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(e.toString())));
+      ).showSnackBar(SnackBar(content: Text("שגיאה בהתחברות: $e")));
+    } finally {
+      setState(() => isLoading = false);
     }
   }
 
-  void _register() async {
-    if (_formKey.currentState!.validate()) {
-      try {
-        await authService.register(
-          username: _usernameController.text.trim(),
-          password: _passwordController.text.trim(),
-          email: _emailController.text.trim(),
-          phoneNumber: _phoneController.text.trim(),
+  Future<void> handleLogin() async {
+    if (!loginFormKey.currentState!.validate()) return;
+    setState(() => isLoading = true);
+    try {
+      final user = await signInUser(
+        email: loginEmailController.text.trim(),
+        password: loginPasswordController.text.trim(),
+      );
+      if (user != null && mounted) {
+        // בדיקת mounted
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => HomeScreen(userEmail: user.email ?? "User"),
+          ),
         );
-
-        if (!mounted) return; // mounted check
-        setState(() => showLogin = true);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Registration successful")),
-        );
-      } on FirebaseAuthException catch (e) {
-        if (!mounted) return;
-        // Show the exact Firebase error message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message ?? "Registration error")),
-        );
-      } catch (e) {
-        if (!mounted) return;
+      }
+    } catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text("Unexpected error: $e")));
+        ).showSnackBar(SnackBar(content: Text("שגיאה בהתחברות: $e")));
       }
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> handleRegister() async {
+    if (!registerFormKey.currentState!.validate()) return;
+    setState(() => isLoading = true);
+    try {
+      final newUser = NewUser(
+        username: registerUsernameController.text.trim(),
+        email: registerEmailController.text.trim(),
+        phoneNumber: registerPhoneController.text.trim(),
+      );
+      final user = await registerUser(
+        newUser: newUser,
+        password: registerPasswordController.text.trim(),
+      );
+      if (user != null && mounted) {
+        // בדיקת mounted
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => HomeScreen(userEmail: user.email ?? "User"),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("שגיאה בהרשמה: $e")));
+      }
+    } finally {
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(showLogin ? "Login" : "Register")),
-      body: Stack(
-        children: [
-          StreamBuilder<List<Product>>(
-            stream: productService.getProducts(),
-            builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                return Center(
-                  child: Text("שגיאה בטעינת מוצרים: ${snapshot.error}"),
-                );
-              }
-              if (!snapshot.hasData) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              final products = snapshot.data!;
-              return ListView.builder(
-                itemCount: products.length,
-                itemBuilder: (context, index) {
-                  final product = products[index];
-                  return ProductListTile(
-                    product: product,
-                    onTap: () {
-                      productService.updateProductChecked(
-                        product.id,
-                        !product.checked,
-                      );
-                    },
-                  );
-                },
-              );
-            },
-          ),
-          Container(
-            color: Colors.white.withAlpha(
-              (0.8 * 255).toInt(),
-            ), // fixed deprecated withOpacity
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: showLogin ? _buildLoginForm() : _buildRegisterForm(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLoginForm() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        TextField(
-          controller: _emailController,
-          decoration: const InputDecoration(labelText: "Email"),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _passwordController,
-          obscureText: true,
-          decoration: const InputDecoration(labelText: "Password"),
-        ),
-        const SizedBox(height: 20),
-        ElevatedButton(onPressed: _login, child: const Text("Login")),
-        TextButton(
-          onPressed: () => setState(() => showLogin = false),
-          child: const Text("Don't have an account? Register"),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRegisterForm() {
-    return Form(
-      key: _formKey,
-      child: ListView(
-        children: [
-          TextFormField(
-            controller: _usernameController,
-            decoration: const InputDecoration(labelText: "Username"),
-            validator: (val) => val!.length >= 3 ? null : "שם משתמש קצר מדי",
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _emailController,
-            decoration: const InputDecoration(labelText: "Email"),
-            validator: (val) => val!.contains('@') ? null : "אימייל לא תקין",
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _passwordController,
-            obscureText: true,
-            decoration: const InputDecoration(labelText: "Password"),
-            validator: (val) => val!.length >= 6 ? null : "סיסמה קצרה מדי",
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _phoneController,
-            decoration: const InputDecoration(labelText: "Phone Number"),
-          ),
-          const SizedBox(height: 20),
-          ElevatedButton(onPressed: _register, child: const Text("Register")),
-          TextButton(
-            onPressed: () => setState(() => showLogin = true),
-            child: const Text("Already have an account? Login"),
-          ),
-        ],
+      body: Center(
+        child: showLogin
+            ? LoginForm(
+                formKey: loginFormKey,
+                emailController: loginEmailController,
+                passwordController: loginPasswordController,
+                isLoading: isLoading,
+                onSubmit: handleLogin,
+                toggleForm: toggleForm,
+              )
+            : RegisterForm(
+                formKey: registerFormKey,
+                emailController: registerEmailController,
+                passwordController: registerPasswordController,
+                usernameController: registerUsernameController,
+                phoneController: registerPhoneController,
+                isLoading: isLoading,
+                onSubmit: handleRegister,
+                toggleForm: toggleForm,
+              ),
       ),
     );
   }
