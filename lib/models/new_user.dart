@@ -1,22 +1,15 @@
-// lib/models/new_user.dart
-// this class represents a new user registering in the app
-// it extends the base User class and can have additional properties or methods specific to new users
-// for now, it just uses the properties from the User class
-import 'package:uuid/uuid.dart';
+class NewUser {
+  String username;
+  String password;
+  String email;
+  String phoneNumber;
+  String userId;
 
-import 'user.dart';
-
-class NewUser extends User {
   NewUser({
-    required String username,
-    required String password,
-    required String email,
-    required String phoneNumber,
-  }) : super(
-         username: username,
-         password: password,
-         email: email,
-         phoneNumber: phoneNumber,
-         userId: Uuid().v4(), // Generate a unique user ID
-       );
+    required this.username,
+    required this.password,
+    required this.email,
+    required this.phoneNumber,
+    required this.userId,
+  });
 }
