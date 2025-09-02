@@ -13,7 +13,7 @@ class ProductService {
         final expirationTimestamp = data['expirationDate'] as Timestamp?;
         return Product(
           id: doc.id,
-          name: data['nameProduct'] ?? 'מוצר ללא שם',
+          name: data['name'] ?? 'מוצר ללא שם',
           description: data['description'] ?? 'ללא תיאור',
           barcode: data['barcode'] ?? 'אין ברקוד',
           icon: Icons.fastfood,
@@ -33,24 +33,7 @@ class ProductService {
     }
   }
 
-  Future<int> getProductCount(String barcode) async {
-    try {
-      final snapshot = await productsCollection
-          .where('barcode', isEqualTo: barcode)
-          .get();
-      if (snapshot.docs.isNotEmpty) {
-        final data = snapshot.docs.first.data() as Map<String, dynamic>?;
-        return data?['count'] ?? 0;
-      }
-      return 0;
-    } on FirebaseException catch (e) {
-      debugPrint('Error getting product count: $e');
-      return 0;
-    }
-  }
-
-
-  int ccountProductByBarcode(List<Product> products ,String  barcode ){
-    return products.where((p)=> p.barcode == na)
+  int countProductByBarcode(List<Product> products, String barcode) {
+    return products.where((p) => p.barcode == barcode).length;
   }
 }
