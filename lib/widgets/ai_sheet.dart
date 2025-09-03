@@ -1,23 +1,34 @@
 import 'package:flutter/material.dart';
+import '../services/ai_service.dart';
 
-// Class representing the AI question input sheet:
 class AiSheet extends StatefulWidget {
-  // Const constructor :
   const AiSheet({super.key});
-  // State class for the AI question input sheet:
   @override
   State<AiSheet> createState() => AiSheetState();
-} // AiSheetState extends State<AiSheet>:
+}
 
 class AiSheetState extends State<AiSheet> {
-  // string variable to hold the user's question:
   String question = '';
   String answer = '';
   bool loading = false;
 
-  Future<void> askGemini(String prompt) {}
+  Future<void> askGemini(String prompt) async {
+    setState(() {
+      loading = true;
+      answer = '';
+      question = prompt;
+    });
+    try {
+      final ai = Ai();
+      final result = await ai.askGemini(prompt);
+      setState(() => answer = result);
+    } catch (e) {
+      setState(() => answer = 'שגיאה: $e');
+    } finally {
+      setState(() => loading = false);
+    }
+  }
 
-  // Build the widget tree for the AI question input sheet:
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -29,23 +40,31 @@ class AiSheetState extends State<AiSheet> {
             'Gemini AI',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
-          // Text field for user input:
           const SizedBox(height: 16),
           TextField(
             decoration: const InputDecoration(
-              // Input decoration for the text field
               labelText: 'הזן שאלה ל-Gemini',
               border: OutlineInputBorder(),
             ),
             onSubmitted: (value) {
-              setState(() {
-                question = value;
-              });
+              askGemini(value);
             },
           ),
           const SizedBox(height: 16),
           if (question.isNotEmpty)
             Text('השאלה שלך: $question', style: const TextStyle(fontSize: 16)),
+          const SizedBox(height: 16),
+          if (loading) const CircularProgressIndicator(),
+          if (answer.isNotEmpty)
+            SizedBox(
+              height: 200,
+              child: SingleChildScrollView(
+                child: Text(
+                  'תשובת Gemini: $answer',
+                  style: const TextStyle(fontSize: 16),
+                ),
+              ),
+            ),
         ],
       ),
     );
