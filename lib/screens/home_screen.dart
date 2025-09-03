@@ -1,16 +1,19 @@
-// lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
-import 'auth_screen.dart';
+import 'package:flutter/services.dart';
+import '../services/sign_out_user.dart';
+import '../services/product_service.dart';
+import '../models/products/product.dart';
+import '../widgets/product_list_tile.dart';
 import '../widgets/bottom_nav.dart';
+import '../widgets/ai_sheet.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  final String userEmail;
+  const HomeScreen({super.key, required this.userEmail});
 
   @override
   Widget build(BuildContext context) {
-    final AuthService _authService = AuthService();
-    final userEmail = _authService.currentUser?.email ?? "User";
+    final productService = ProductService();
 
     return Scaffold(
       appBar: AppBar(
@@ -18,32 +21,67 @@ class HomeScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () {
-              _authService.signOut();
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const AuthScreen()),
-              );
+            onPressed: () async {
+              await signOutUser();
+              SystemNavigator.pop();
             },
           ),
         ],
       ),
-      body: Container(
-        // This is a placeholder for your home screen content
-        color: Colors.orange,
-        child: const Center(
-          child: Text(
-            "Home Screen",
-            style: TextStyle(fontSize: 24, color: Colors.white),
-          ),
-        ),
+      body: StreamBuilder<List<Product>>(
+        stream: productService.getProducts(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(
+              child: Text("שגיאה בטעינת מוצרים: ${snapshot.error}"),
+            );
+          }
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final products = snapshot.data ?? [];
+          if (products.isEmpty) {
+            return const Center(child: Text("אין מוצרים להצגה"));
+          }
+
+          return ListView.builder(
+            itemCount: products.length,
+            itemBuilder: (context, index) {
+              final product = products[index];
+              return ProductListTile(
+                product: product,
+                onTap: () async {
+                  final newDate = await showDatePicker(
+                    context: context,
+                    initialDate: product.expirationDate,
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime(2100),
+                  );
+                  if (newDate != null) {
+                    await productService.updateProductExpirationDate(
+                      product.id,
+                      newDate,
+                    );
+                  }
+                },
+              );
+            },
+          );
+        },
       ),
-      // Here's where the BottomNav widget goes.
       bottomNavigationBar: BottomNav(
         onItemTap: (index) {
-          print("Tapped item index: $index");
-          // You would handle navigation here based on the index
-          // For example: if (index == 0) { show Home page }
+          if (index == 3) {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              builder: (context) => SizedBox(
+                height: MediaQuery.of(context).size.height * 0.5,
+                child: const AiSheet(),
+              ),
+            );
+          }
         },
       ),
     );
