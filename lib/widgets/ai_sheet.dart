@@ -15,6 +15,8 @@ class AiSheetState extends State<AiSheet> {
   String answer = '';
   bool loading = false;
 
+  Future<void> askGemini(String prompt) {}
+
   // Build the widget tree for the AI question input sheet:
   @override
   Widget build(BuildContext context) {
