@@ -12,6 +12,8 @@ class AiSheet extends StatefulWidget {
 class AiSheetState extends State<AiSheet> {
   // string variable to hold the user's question:
   String question = '';
+  String answer = '';
+  bool loading = false;
 
   // Build the widget tree for the AI question input sheet:
   @override
@@ -29,6 +31,7 @@ class AiSheetState extends State<AiSheet> {
           const SizedBox(height: 16),
           TextField(
             decoration: const InputDecoration(
+              // Input decoration for the text field
               labelText: 'הזן שאלה ל-Gemini',
               border: OutlineInputBorder(),
             ),
