@@ -1,29 +1,22 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore package
 
-/// A service class to handle user-related operations with Firestore.
 class UserService {
-  // A static reference to the 'users' collection in Firestore.
+  // Reference to the "users" collection in Firestore
   static final CollectionReference usersCollection = FirebaseFirestore.instance
       .collection('users');
 
-  /// Creates a new user profile document in the 'users' collection.
+  // Creates a user profile document in Firestore
   static Future<void> createUserProfile({
-    required String userId,
-    required String username,
-    required String email,
-    required String phoneNumber,
+    required String userId, // User ID
+    required String username, // Username
+    required String email, // Email address
+    required String phoneNumber, // Phone number
   }) async {
-    try {
-      // Use await to wait for the Future returned by the set method to complete.
-      await usersCollection.doc(userId).set({
-        'username': username,
-        'email': email,
-        'phoneNumber': phoneNumber,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-      debugPrint('User profile for $username created successfully!');
-    } catch (e) {
-      debugPrint('Error creating user profile: $e');
-    }
+    await usersCollection.doc(userId).set({
+      'username': username, // Store username
+      'email': email, // Store email
+      'phoneNumber': phoneNumber, // Store phone number
+      'createdAt': FieldValue.serverTimestamp(), // Store creation time
+    });
   }
 }
