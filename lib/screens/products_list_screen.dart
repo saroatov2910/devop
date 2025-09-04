@@ -1,51 +1,45 @@
-// lib/screens/products_list_screen.dart
 import 'package:flutter/material.dart';
-import 'package:devop/models/products/product.dart';
-import 'package:devop/services/product_service.dart';
+import '../models/products/product.dart';
 
-class ProductsListScreen extends StatelessWidget {
-  const ProductsListScreen({super.key});
+// Product ListTile widget displays product information in a list
+class ProductListTile extends StatelessWidget {
+  // The product to display
+  final Product product;
+  // Callback when the tile or checkbox is tapped
+  final VoidCallback onTap;
+
+  // Constructor requires product and onTap callback
+  const ProductListTile({
+    super.key,
+    required this.product,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final ProductService productService = ProductService();
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('רשימת מוצרים')),
-      body: StreamBuilder<List<Product>>(
-        stream: productService.getProducts(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('שגיאה: ${snapshot.error}'));
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('אין מוצרים זמינים.'));
-          }
-
-          final products = snapshot.data!;
-          debugPrint("${products.length} products");
-          return ListView.builder(
-            itemCount: products.length,
-            itemBuilder: (context, index) {
-              final product = products[index];
-              return ListTile(
-                title: Text(product.name),
-                subtitle: Text(product.description),
-                leading: Icon(product.icon),
-                trailing: Checkbox(
-                  value: product.checked,
-                  onChanged: (bool? newValue) {
-                    productService.updateProductChecked(product.id, newValue!);
-                  },
-                ),
-              );
-            },
-          );
-        },
+    return ListTile(
+      leading: Icon(
+        product.icon, // Product icon
+        color: product.getExpirationColor(), // Color based on expiration
       ),
+      title: Text(product.name), // Product name
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(product.description), // Product description
+          Text("ID: ${product.id}"), // Product ID
+          Text("Barcode: ${product.barcode}"), // Product barcode
+          Text(
+            // Expiration date formatted as YYYY-MM-DD
+            "Expires: ${product.expirationDate.toLocal().toString().split(' ')[0]}",
+          ),
+        ],
+      ),
+      trailing: Checkbox(
+        value: product.checked, // Checked state
+        onChanged: (_) => onTap(), // Calls onTap when changed
+      ),
+      onTap: onTap, // Calls onTap when tile is tapped
     );
   }
 }
