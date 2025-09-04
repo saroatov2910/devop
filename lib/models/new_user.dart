@@ -1,15 +1,19 @@
 class NewUser {
-  String username;
-  String password;
-  String email;
-  String phoneNumber;
-  String userId;
+  final String username; // The user's display name
+  final String email; // The user's email address
+  final String phoneNumber; // The user's phone number
 
+  // Constructor for NewUser, requires all fields
   NewUser({
     required this.username,
-    required this.password,
     required this.email,
     required this.phoneNumber,
-    required this.userId,
   });
+
+  // Converts the NewUser object to a map for storage or transfer
+  Map<String, dynamic> toMap() => {
+    'username': username,
+    'email': email,
+    'phoneNumber': phoneNumber,
+  };
 }
