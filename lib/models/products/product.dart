@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 
+// Model for a product item
 class Product {
-  final String id;
-  final String name;
-  final String description;
-  final String barcode;
-  final IconData icon;
-  final DateTime expirationDate;
-  final bool checked;
-  final String category;
+  final String id; // Unique product ID
+  final String name; // Product name
+  final String description; // Product description
+  final String barcode; // Product barcode
+  final IconData icon; // Icon representing the product
+  final DateTime expirationDate; // Expiration date of the product
+  final bool checked; // Whether the product is checked/selected
+  final String category; // Product category
 
+  // Product class constructor
   Product({
     required this.id,
     required this.name,
@@ -18,9 +20,13 @@ class Product {
     required this.icon,
     required this.expirationDate,
     required this.category,
-    this.checked = false,
+    this.checked = false, // Default value for checked is false
   });
 
+  // Returns a color based on the expiration date:
+  // - Red if expired
+  // - Yellow if expiring within 3 days
+  // - Green if fresh
   Color getExpirationColor() {
     final now = DateTime.now();
     if (expirationDate.isBefore(now)) return Colors.red;
