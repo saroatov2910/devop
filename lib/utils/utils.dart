@@ -1,40 +1,21 @@
+// Utility class with validation functions for user input
 class Utils {
-  static bool isValidEmail(String email) {
-    final RegExp emailRegex = RegExp(
-      r'^[\w\.\+\-]+@[a-zA-Z0-9\-]+\.[a-zA-Z]{2,}$',
-    );
-    return emailRegex.hasMatch(email);
-  }
+  // Checks if the email contains '@' and '.'
+  static bool isValidEmail(String email) =>
+      email.contains('@') && email.contains('.');
 
-  static String? validatePassword(String password) {
-    bool hasUppercase = password.contains(RegExp(r'[A-Z]'));
-    bool hasNumber = password.contains(RegExp(r'[0-9]'));
-    bool hasSpecial = password.contains(RegExp(r'[!@#\$&*~]'));
-    bool longEnough = password.length >= 6;
-
-    if (!hasUppercase) {
-      return "Password must contain at least one uppercase letter.";
-    }
-    if (!hasNumber) {
-      return "Password must contain at least one number.";
-    }
-    if (!hasSpecial) {
-      return "Password must contain at least one special character (!@#\$&*~).";
-    }
-    if (!longEnough) {
-      return "Password must be at least 6 characters long.";
-    }
-
+  // Validates password for registration (must be at least 6 characters)
+  static String? validatePasswordForRegistration(String password) {
+    if (password.length < 6) return 'הסיסמה חייבת לפחות 6 תווים';
     return null;
   }
 
-  static bool isValidPhoneNumber(String phoneNumber) {
-    final RegExp phoneRegex = RegExp(r'^\+?[0-9]{9,15}$');
-    return phoneRegex.hasMatch(phoneNumber);
-  }
+  // Validates password for login (must be at least 6 characters)
+  static bool validatePasswordForLogin(String password) => password.length >= 6;
 
-  static bool isValidUsername(String username) {
-    final RegExp usernameRegex = RegExp(r'^[a-zA-Z0-9._]{3,}$');
-    return usernameRegex.hasMatch(username);
-  }
-}
+  // Checks if phone number length is between 9 and 12 digits
+  static bool isValidPhoneNumber(String phoneNumber) =>
+      phoneNumber.length >= 9 && phoneNumber.length <= 12;
+
+  // Checks if username is at least 3 characters
+  static bool isValidUsername(String username) => username.length >
