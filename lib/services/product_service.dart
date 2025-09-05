@@ -54,19 +54,19 @@ class ProductService {
   int countProductByBarcode(List<Product> products, String barcode) {
     return products.where((p) => p.barcode == barcode).length;
   }
-}
 
-Future<void> moveAndDeleteExpiredProducts() async {
-  final now = DateTime.now();
-  final snapshot = await productsCollection.get();
-  for (var doc in snapshot.docs) {
-    final expirationDate =
-        (doc.data() as Map<String, dynamic>)['expirationDate'] as Timestamp?;
-    if (expirationDate != null && expirationDate.toDate().isBefore(now)) {
-      // Move expired product to history
-      await historyCollection.doc(doc.id).set(doc.data());
-      // Delete expired product from current collection
-      await productsCollection.doc(doc.id).delete();
+  Future<void> moveAndDeleteExpiredProducts() async {
+    final now = DateTime.now();
+    final snapshot = await productsCollection.get();
+    for (var doc in snapshot.docs) {
+      final expirationDate =
+          (doc.data() as Map<String, dynamic>)['expirationDate'] as Timestamp?;
+      if (expirationDate != null && expirationDate.toDate().isBefore(now)) {
+        // Move expired product to history
+        await historyCollection.doc(doc.id).set(doc.data());
+        // Delete expired product from current collection
+        await productsCollection.doc(doc.id).delete();
+      }
     }
   }
 }
