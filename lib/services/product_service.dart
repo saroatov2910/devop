@@ -55,3 +55,5 @@ class ProductService {
     return products.where((p) => p.barcode == barcode).length;
   }
 }
+
+Future<void> moveAndDeleteExpiredProducts() async {}
