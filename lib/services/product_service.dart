@@ -4,7 +4,7 @@ import '../models/products/product.dart';
 
 class ProductService {
   final CollectionReference productsCollection = FirebaseFirestore.instance
-      .collection('products');
+      .collection('My_Fridge');
   final CollectionReference historyCollection = FirebaseFirestore.instance
       .collection('products_history');
 
@@ -14,14 +14,22 @@ class ProductService {
       return snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>? ?? {};
 
-        final expirationTimestamp =
-            data.containsKey('expirationDate') &&
-                data['expirationDate'] is Timestamp
-            ? data['expirationDate'] as Timestamp
-            : null;
-        debugPrint(
-          'Product: ${data['name']}, expirationDate: ${expirationTimestamp?.toDate()}',
-        );
+        // Handle expirationDate as Timestamp or String
+        final expirationRaw = data['expirationDate'];
+        DateTime expirationDate;
+        if (expirationRaw is Timestamp) {
+          expirationDate = expirationRaw.toDate();
+        } else if (expirationRaw is String) {
+          try {
+            expirationDate = DateTime.parse(expirationRaw);
+          } catch (_) {
+            expirationDate = DateTime.now();
+          }
+        } else {
+          expirationDate = DateTime.now();
+        }
+
+        debugPrint('Product: ${data['name']}, expirationDate: $expirationDate');
 
         return Product(
           id: doc.id,
@@ -30,7 +38,7 @@ class ProductService {
           barcode: data['barcode'] ?? 'אין ברקוד',
           icon: Icons.fastfood,
           checked: data['checked'] ?? false,
-          expirationDate: expirationTimestamp?.toDate() ?? DateTime.now(),
+          expirationDate: expirationDate,
           category: data['category'] ?? 'לא סווג',
         );
       }).toList();
