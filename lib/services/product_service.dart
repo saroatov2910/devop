@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import '../models/products/product.dart';
 
 class ProductService {
+  // Reference to the main products collection (now 'My_Fridge')
   final CollectionReference productsCollection = FirebaseFirestore.instance
       .collection('My_Fridge');
+  // Reference to the history collection for expired products
   final CollectionReference historyCollection = FirebaseFirestore.instance
       .collection('products_history');
 
-  // Stream of products from Firestore (Realtime)
+  /// Returns a stream of products from Firestore in realtime.
   Stream<List<Product>> getProducts() {
     return productsCollection.snapshots().map((snapshot) {
       return snapshot.docs.map((doc) {
@@ -29,11 +31,14 @@ class ProductService {
           expirationDate = DateTime.now();
         }
 
-        debugPrint('Product: ${data['name']}, expirationDate: $expirationDate');
+        // Use product_name if name is missing
+        debugPrint(
+          'Product: ${data['product_name'] ?? data['name']}, expirationDate: $expirationDate',
+        );
 
         return Product(
           id: doc.id,
-          name: data['name'] ?? 'מוצר ללא שם',
+          name: data['name'] ?? data['product_name'] ?? 'מוצר ללא שם',
           description: data['description'] ?? 'ללא תיאור',
           barcode: data['barcode'] ?? 'אין ברקוד',
           icon: Icons.fastfood,
@@ -45,7 +50,7 @@ class ProductService {
     });
   }
 
-  // Update product expiration date in Firestore
+  /// Updates the expiration date of a product in Firestore.
   Future<void> updateProductExpirationDate(
     String productId,
     DateTime newDate,
@@ -59,24 +64,24 @@ class ProductService {
     }
   }
 
-  // Count products by barcode
+  /// Counts products by barcode in a given list.
   int countProductByBarcode(List<Product> products, String barcode) {
     return products.where((p) => p.barcode == barcode).length;
   }
 
-  // Move expired products to history and delete from main collection
+  /// Moves expired products to history and deletes them from the main collection.
   Future<void> moveAndDeleteExpiredProducts() async {
     final now = DateTime.now();
     final snapshot = await productsCollection.get();
     for (var doc in snapshot.docs) {
-      final expirationDate =
-          (doc.data() as Map<String, dynamic>).containsKey('expirationDate') &&
-              (doc.data() as Map<String, dynamic>)['expirationDate']
-                  is Timestamp
-          ? (doc.data() as Map<String, dynamic>)['expirationDate'] as Timestamp
-          : null;
+      final data = doc.data() as Map<String, dynamic>;
+      final expirationField = data['expirationDate'];
+      Timestamp? expirationDate;
+      if (expirationField is Timestamp) {
+        expirationDate = expirationField;
+      }
       if (expirationDate != null && expirationDate.toDate().isBefore(now)) {
-        await historyCollection.doc(doc.id).set(doc.data());
+        await historyCollection.doc(doc.id).set(data);
         await productsCollection.doc(doc.id).delete();
       }
     }
