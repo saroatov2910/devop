@@ -23,9 +23,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void triggerPiCommand(String command) async {
     final firestore = FirebaseFirestore.instance;
     try {
-      await firestore.collection('commands').add({
+      await firestore.collection('scanner_commands').doc('control').set({
         'command': command,
-        'device_id': 'smartfridge_pi',
         'timestamp': FieldValue.serverTimestamp(),
       });
       if (mounted) {
@@ -42,12 +41,44 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // פונקציה לעריכת שם מוצר
+  void editProductName(BuildContext context, Product product) {
+    final controller = TextEditingController(text: product.name);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('ערוך שם מוצר'),
+        content: TextField(
+          controller: controller,
+          decoration: InputDecoration(labelText: 'שם חדש'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('ביטול'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await FirebaseFirestore.instance
+                  .collection('My_Fridge')
+                  .doc(product.id)
+                  .update({'name': controller.text});
+              Navigator.pop(context);
+              setState(() {}); // רענון המסך
+            },
+            child: Text('שמור'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final productService = ProductService();
 
     return StreamBuilder<List<Product>>(
-      stream: productService.getProducts(),
+      stream: productService.getProducts(context),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Scaffold(
@@ -96,27 +127,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     itemCount: products.length,
                     itemBuilder: (context, index) {
                       final product = products[index];
+                      final count = productService.countProductByBarcode(
+                        products,
+                        product.barcode,
+                      );
                       return ProductListTile(
                         product: product,
-                        onTap: () async {
-                          final pickedRange = await showDateRangePicker(
-                            context: context,
-                            firstDate: DateTime.now(),
-                            lastDate: DateTime(2100),
-                            initialDateRange: DateTimeRange(
-                              start: product.expirationDate,
-                              end: product.expirationDate.add(
-                                const Duration(days: 7),
-                              ),
-                            ),
-                          );
-                          if (pickedRange != null) {
-                            await productService.updateProductExpirationDate(
-                              product.id,
-                              pickedRange.end,
-                            );
-                          }
+                        onTap: () {
+                          editProductName(context, product);
                         },
+                        count: count,
                       );
                     },
                   ),
@@ -125,17 +145,15 @@ class _HomeScreenState extends State<HomeScreen> {
             isScanning: isScanning,
             onItemTap: (index) {
               if (index == 0) {
-                // כפתור סריקה
                 if (!isScanning) {
-                  triggerPiCommand('start_scan');
+                  triggerPiCommand('start');
                 } else {
-                  triggerPiCommand('stop_scan');
+                  triggerPiCommand('stop');
                 }
                 setState(() {
                   isScanning = !isScanning;
                 });
               } else if (index == 4) {
-                // Notifications tab
                 final notifications =
                     NotificationService.getExpiringProductNotifications(
                       products,
