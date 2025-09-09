@@ -3,20 +3,28 @@ import 'package:flutter/material.dart';
 import '../models/products/product.dart';
 
 class ProductService {
-  // Reference to the main products collection (now 'My_Fridge')
   final CollectionReference productsCollection = FirebaseFirestore.instance
       .collection('My_Fridge');
-  // Reference to the history collection for expired products
   final CollectionReference historyCollection = FirebaseFirestore.instance
       .collection('products_history');
 
-  /// Returns a stream of products from Firestore in realtime.
-  Stream<List<Product>> getProducts() {
+  Stream<List<Product>> getProducts(BuildContext context) {
     return productsCollection.snapshots().map((snapshot) {
       return snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>? ?? {};
+        final productName =
+            data['name'] ?? data['product_name'] ?? 'מוצר ללא שם';
 
-        // Handle expirationDate as Timestamp or String
+        if (productName == 'מוצר ללא שם') {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Warning: Product name is missing!'),
+              ),
+            );
+          });
+        }
+
         final expirationRaw = data['expirationDate'];
         DateTime expirationDate;
         if (expirationRaw is Timestamp) {
@@ -31,26 +39,23 @@ class ProductService {
           expirationDate = DateTime.now();
         }
 
-        // Use product_name if name is missing
-        debugPrint(
-          'Product: ${data['product_name'] ?? data['name']}, expirationDate: $expirationDate',
-        );
+        debugPrint('Product: $productName, expirationDate: $expirationDate');
 
         return Product(
           id: doc.id,
-          name: data['name'] ?? data['product_name'] ?? 'מוצר ללא שם',
+          name: productName,
           description: data['description'] ?? 'ללא תיאור',
           barcode: data['barcode'] ?? 'אין ברקוד',
           icon: Icons.fastfood,
           checked: data['checked'] ?? false,
           expirationDate: expirationDate,
           category: data['category'] ?? 'לא סווג',
+          quantity: data['quantity'] ?? 1,
         );
       }).toList();
     });
   }
 
-  /// Updates the expiration date of a product in Firestore.
   Future<void> updateProductExpirationDate(
     String productId,
     DateTime newDate,
@@ -69,7 +74,20 @@ class ProductService {
     return products.where((p) => p.barcode == barcode).length;
   }
 
-  /// Moves expired products to history and deletes them from the main collection.
+  /// Get quantity of a product by barcode from Firestore
+  Future<int?> getQuantityByBarcode(String barcode) async {
+    final snapshot = await productsCollection
+        .where('barcode', isEqualTo: barcode)
+        .limit(1)
+        .get();
+    int sum = 0;
+    for (var doc in snapshot.docs) {
+      final data = doc.data() as Map<String, dynamic>;
+      sum += (data['quantity'] ?? 1) as int;
+    }
+    return sum;
+  }
+
   Future<void> moveAndDeleteExpiredProducts() async {
     final now = DateTime.now();
     final snapshot = await productsCollection.get();
