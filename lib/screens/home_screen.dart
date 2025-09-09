@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/sign_out_user.dart';
 import '../services/product_service.dart';
+import '../services/notification_service.dart';
 import '../models/products/product.dart';
 import '../widgets/product_list_tile.dart';
 import '../widgets/bottom_nav.dart';
 import '../widgets/ai_sheet.dart';
 
-// Home Screen:
 class HomeScreen extends StatelessWidget {
   final String userEmail;
   const HomeScreen({super.key, required this.userEmail});
@@ -58,40 +58,64 @@ class HomeScreen extends StatelessWidget {
           ),
           body: products.isEmpty
               ? const Center(child: Text("אין מוצרים להצגה"))
-              : ListView.builder(
-                  itemCount: products.length,
-                  itemBuilder: (context, index) {
-                    final product = products[index];
-                    return ProductListTile(
-                      product: product,
-                      onTap: () async {
-                        // Opens date range picker, prevents selecting past dates
-                        final pickedRange = await showDateRangePicker(
-                          context: context,
-                          firstDate:
-                              DateTime.now(), // Prevents selecting dates before today
-                          lastDate: DateTime(2100),
-                          initialDateRange: DateTimeRange(
-                            start: product.expirationDate,
-                            end: product.expirationDate.add(
-                              const Duration(days: 7),
-                            ),
-                          ),
-                        );
-                        // If a new range is selected, update the expiration date in Firebase
-                        if (pickedRange != null) {
-                          await productService.updateProductExpirationDate(
-                            product.id,
-                            pickedRange.end, // Save the end date as expiration
-                          );
-                        }
-                      },
-                    );
+              : RefreshIndicator(
+                  onRefresh: () async {
+                    // רענון ידני, אפשר להוסיף לוגיקה אם צריך
+                    await Future.delayed(const Duration(milliseconds: 500));
                   },
+                  child: ListView.builder(
+                    itemCount: products.length,
+                    itemBuilder: (context, index) {
+                      final product = products[index];
+                      return ProductListTile(
+                        product: product,
+                        onTap: () async {
+                          final pickedRange = await showDateRangePicker(
+                            context: context,
+                            firstDate: DateTime.now(),
+                            lastDate: DateTime(2100),
+                            initialDateRange: DateTimeRange(
+                              start: product.expirationDate,
+                              end: product.expirationDate.add(
+                                const Duration(days: 7),
+                              ),
+                            ),
+                          );
+                          if (pickedRange != null) {
+                            await productService.updateProductExpirationDate(
+                              product.id,
+                              pickedRange.end,
+                            );
+                          }
+                        },
+                      );
+                    },
+                  ),
                 ),
           bottomNavigationBar: BottomNav(
             onItemTap: (index) {
-              if (index == 3) {
+              if (index == 4) {
+                // Notifications tab
+                final notifications =
+                    NotificationService.getExpiringProductNotifications(
+                      products,
+                    );
+                showModalBottomSheet(
+                  context: context,
+                  builder: (context) => ListView(
+                    children: notifications.isEmpty
+                        ? [const ListTile(title: Text('אין התראות כרגע'))]
+                        : notifications
+                              .map(
+                                (n) => ListTile(
+                                  title: Text(n.title),
+                                  subtitle: Text(n.body),
+                                ),
+                              )
+                              .toList(),
+                  ),
+                );
+              } else if (index == 3) {
                 showModalBottomSheet(
                   context: context,
                   isScrollControlled: true,
