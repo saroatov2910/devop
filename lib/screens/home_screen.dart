@@ -7,10 +7,40 @@ import '../models/products/product.dart';
 import '../widgets/product_list_tile.dart';
 import '../widgets/bottom_nav.dart';
 import '../widgets/ai_sheet.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   final String userEmail;
   const HomeScreen({super.key, required this.userEmail});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  bool isScanning = false;
+
+  void triggerPiCommand(String command) async {
+    final firestore = FirebaseFirestore.instance;
+    try {
+      await firestore.collection('commands').add({
+        'command': command,
+        'device_id': 'smartfridge_pi',
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('פעולה "$command" נשלחה ל-Pi!')));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('שגיאה בשליחת הפעולה: $e')));
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +52,7 @@ class HomeScreen extends StatelessWidget {
         if (snapshot.hasError) {
           return Scaffold(
             appBar: AppBar(
-              title: Text("Welcome, $userEmail"),
+              title: Text("Welcome, ${widget.userEmail}"),
               actions: [
                 IconButton(
                   icon: const Icon(Icons.logout),
@@ -45,7 +75,7 @@ class HomeScreen extends StatelessWidget {
         final products = snapshot.data ?? [];
         return Scaffold(
           appBar: AppBar(
-            title: Text("Welcome, $userEmail"),
+            title: Text("Welcome, ${widget.userEmail}"),
             actions: [
               IconButton(
                 icon: const Icon(Icons.logout),
@@ -60,7 +90,6 @@ class HomeScreen extends StatelessWidget {
               ? const Center(child: Text("אין מוצרים להצגה"))
               : RefreshIndicator(
                   onRefresh: () async {
-                    // רענון ידני, אפשר להוסיף לוגיקה אם צריך
                     await Future.delayed(const Duration(milliseconds: 500));
                   },
                   child: ListView.builder(
@@ -93,8 +122,19 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
           bottomNavigationBar: BottomNav(
+            isScanning: isScanning,
             onItemTap: (index) {
-              if (index == 4) {
+              if (index == 0) {
+                // כפתור סריקה
+                if (!isScanning) {
+                  triggerPiCommand('start_scan');
+                } else {
+                  triggerPiCommand('stop_scan');
+                }
+                setState(() {
+                  isScanning = !isScanning;
+                });
+              } else if (index == 4) {
                 // Notifications tab
                 final notifications =
                     NotificationService.getExpiringProductNotifications(
