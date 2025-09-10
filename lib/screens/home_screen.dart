@@ -65,8 +65,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   .collection('My_Fridge')
                   .doc(product.id)
                   .update({'name': controller.text});
-              Navigator.pop(context);
-              setState(() {}); // Refresh the screen
+              if (mounted) {
+                Navigator.pop(context);
+                setState(() {}); // Refresh the screen
+              }
             },
             child: Text('Save'),
           ),
@@ -90,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Play beep sound after successful add
     final player = AudioPlayer();
-    await player.play(AssetSource('beep.mp3'));
+    await player.play(AssetSource('mixkit-retro-game-notification-212.wav'));
   }
 
   @override
@@ -156,16 +158,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       return ProductListTile(
                         product: product,
                         onTap: () async {
-                          // Play beep sound when product is tapped/scanned
-                          final player = AudioPlayer();
-                          await player.play(
-                            AssetSource(
-                              'mixkit-retro-game-notification-212.wav',
-                            ),
-                          );
-
-                          // Open dialog to edit product name
-                          editProductName(context, product);
+                          // כאן לא משמיעים צליל, רק פותחים דיאלוג עריכה
+                          if (mounted) {
+                            editProductName(context, product);
+                          }
                         },
                         count: count,
                       );
