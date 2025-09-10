@@ -9,6 +9,7 @@ import '../widgets/bottom_nav.dart';
 import '../widgets/ai_sheet.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:audioplayers/audioplayers.dart';
+import '../widgets/add_product_dialog.dart';
 
 class HomeScreen extends StatefulWidget {
   final String userEmail;
@@ -43,36 +44,72 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // Opens a dialog to manually edit the product name
+  // Opens a dialog to manually edit the product name and expiration date
   void editProductName(BuildContext context, Product product) {
     final controller = TextEditingController(text: product.name);
+    DateTime selectedDate = product.expirationDate;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Edit Product Name'),
-        content: TextField(
-          controller: controller,
-          decoration: InputDecoration(labelText: 'New Name'),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text('Edit Product'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: controller,
+                decoration: InputDecoration(labelText: 'New Name'),
+              ),
+              SizedBox(height: 16),
+              Row(
+                children: [
+                  Text(
+                    'Expiration Date: ${selectedDate.toLocal().toString().split(' ')[0]}',
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.calendar_today),
+                    onPressed: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: selectedDate,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime(2100),
+                      );
+                      if (picked != null) {
+                        setState(() {
+                          selectedDate = picked;
+                        });
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                await FirebaseFirestore.instance
+                    .collection('My_Fridge')
+                    .doc(product.id)
+                    .update({
+                      'name': controller.text,
+                      'expirationDate': Timestamp.fromDate(selectedDate),
+                    });
+                if (mounted) {
+                  Navigator.pop(context);
+                  setState(() {}); // Refresh the screen
+                }
+              },
+              child: Text('Save'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              await FirebaseFirestore.instance
-                  .collection('My_Fridge')
-                  .doc(product.id)
-                  .update({'name': controller.text});
-              if (mounted) {
-                Navigator.pop(context);
-                setState(() {}); // Refresh the screen
-              }
-            },
-            child: Text('Save'),
-          ),
-        ],
       ),
     );
   }
@@ -158,7 +195,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       return ProductListTile(
                         product: product,
                         onTap: () async {
-                          // כאן לא משמיעים צליל, רק פותחים דיאלוג עריכה
                           if (mounted) {
                             editProductName(context, product);
                           }
@@ -214,6 +250,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               }
             },
+          ),
+          floatingActionButton: FloatingActionButton(
+            tooltip: 'Add Product',
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => AddProductDialog(
+                  onAdd: (product) async {
+                    await addProduct(product);
+                    if (mounted) setState(() {});
+                  },
+                ),
+              );
+            },
+            child: Icon(Icons.add),
           ),
         );
       },
