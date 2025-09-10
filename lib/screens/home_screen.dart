@@ -8,6 +8,7 @@ import '../widgets/product_list_tile.dart';
 import '../widgets/bottom_nav.dart';
 import '../widgets/ai_sheet.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class HomeScreen extends StatefulWidget {
   final String userEmail;
@@ -20,6 +21,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   bool isScanning = false;
 
+  // Sends a command to the Pi via Firestore
   void triggerPiCommand(String command) async {
     final firestore = FirebaseFirestore.instance;
     try {
@@ -28,34 +30,34 @@ class _HomeScreenState extends State<HomeScreen> {
         'timestamp': FieldValue.serverTimestamp(),
       });
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('פעולה "$command" נשלחה ל-Pi!')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Command "$command" sent to Pi!')),
+        );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('שגיאה בשליחת הפעולה: $e')));
+        ).showSnackBar(SnackBar(content: Text('Error sending command: $e')));
       }
     }
   }
 
-  // פונקציה לעריכת שם מוצר
+  // Opens a dialog to manually edit the product name
   void editProductName(BuildContext context, Product product) {
     final controller = TextEditingController(text: product.name);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('ערוך שם מוצר'),
+        title: Text('Edit Product Name'),
         content: TextField(
           controller: controller,
-          decoration: InputDecoration(labelText: 'שם חדש'),
+          decoration: InputDecoration(labelText: 'New Name'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('ביטול'),
+            child: Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -64,9 +66,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   .doc(product.id)
                   .update({'name': controller.text});
               Navigator.pop(context);
-              setState(() {}); // רענון המסך
+              setState(() {}); // Refresh the screen
             },
-            child: Text('שמור'),
+            child: Text('Save'),
           ),
         ],
       ),
@@ -94,7 +96,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
-            body: Center(child: Text("שגיאה בטעינת מוצרים: ${snapshot.error}")),
+            body: Center(
+              child: Text("Error loading products: ${snapshot.error}"),
+            ),
           );
         }
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -118,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           body: products.isEmpty
-              ? const Center(child: Text("אין מוצרים להצגה"))
+              ? const Center(child: Text("No products to display"))
               : RefreshIndicator(
                   onRefresh: () async {
                     await Future.delayed(const Duration(milliseconds: 500));
@@ -133,7 +137,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                       return ProductListTile(
                         product: product,
-                        onTap: () {
+                        onTap: () async {
+                          // Play a short beep sound when product is tapped/scanned
+                          final player = AudioPlayer();
+                          await player.play(AssetSource('beep.mp3'));
+
+                          // Open dialog to edit product name
                           editProductName(context, product);
                         },
                         count: count,
@@ -145,6 +154,7 @@ class _HomeScreenState extends State<HomeScreen> {
             isScanning: isScanning,
             onItemTap: (index) {
               if (index == 0) {
+                // Start or stop scanning
                 if (!isScanning) {
                   triggerPiCommand('start');
                 } else {
@@ -154,6 +164,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   isScanning = !isScanning;
                 });
               } else if (index == 4) {
+                // Show notifications for expiring products
                 final notifications =
                     NotificationService.getExpiringProductNotifications(
                       products,
@@ -162,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   context: context,
                   builder: (context) => ListView(
                     children: notifications.isEmpty
-                        ? [const ListTile(title: Text('אין התראות כרגע'))]
+                        ? [const ListTile(title: Text('No notifications'))]
                         : notifications
                               .map(
                                 (n) => ListTile(
@@ -174,6 +185,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 );
               } else if (index == 3) {
+                // Show AI sheet
                 showModalBottomSheet(
                   context: context,
                   isScrollControlled: true,
