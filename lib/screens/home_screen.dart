@@ -75,6 +75,24 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Adds a new product to Firestore and plays beep sound
+  Future<void> addProduct(Product product) async {
+    await FirebaseFirestore.instance.collection('My_Fridge').add({
+      'name': product.name,
+      'description': product.description,
+      'barcode': product.barcode,
+      'icon': product.icon.codePoint,
+      'expirationDate': Timestamp.fromDate(product.expirationDate),
+      'category': product.category,
+      'quantity': product.quantity,
+      'checked': product.checked,
+    });
+
+    // Play beep sound after successful add
+    final player = AudioPlayer();
+    await player.play(AssetSource('beep.mp3'));
+  }
+
   @override
   Widget build(BuildContext context) {
     final productService = ProductService();
@@ -138,9 +156,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       return ProductListTile(
                         product: product,
                         onTap: () async {
-                          // Play a short beep sound when product is tapped/scanned
+                          // Play beep sound when product is tapped/scanned
                           final player = AudioPlayer();
-                          await player.play(AssetSource('beep.mp3'));
+                          await player.play(
+                            AssetSource(
+                              'mixkit-retro-game-notification-212.wav',
+                            ),
+                          );
 
                           // Open dialog to edit product name
                           editProductName(context, product);
