@@ -1,24 +1,32 @@
 import 'package:flutter/material.dart';
 import '../services/ai_service.dart';
+import '../models/products/product.dart';
+// AiSheet :
 
 class AiSheet extends StatefulWidget {
-  const AiSheet({super.key});
+  final List<Product> products;
+
+  const AiSheet({super.key, required this.products});
+
   @override
   State<AiSheet> createState() => AiSheetState();
 }
 
+//AiSheetState is have a 3 paramptr:
 class AiSheetState extends State<AiSheet> {
   String question = '';
   String answer = '';
   bool loading = false;
 
-  Future<void> askGemini(String prompt) async {
+  Future<void> askGemini(String userQuestion) async {
     setState(() {
       loading = true;
       answer = '';
-      question = prompt;
+      question = userQuestion;
     });
     try {
+      String productsText = widget.products.map((p) => p.name).join(', ');
+      String prompt = 'המצרכים שלי: $productsText. השאלה שלי: $userQuestion';
       final ai = Ai();
       final result = await ai.askGemini(prompt);
       setState(() => answer = result);
@@ -51,6 +59,7 @@ class AiSheetState extends State<AiSheet> {
             },
           ),
           const SizedBox(height: 16),
+          //
           if (question.isNotEmpty)
             Text('השאלה שלך: $question', style: const TextStyle(fontSize: 16)),
           const SizedBox(height: 16),
