@@ -1,5 +1,5 @@
 import '../models/products/product.dart';
-import '../models/Notification/otification.dart';
+import '../models/notification/notification.dart';
 
 class NotificationService {
   static List<AppNotification> getExpiringProductNotifications(
@@ -9,12 +9,10 @@ class NotificationService {
     final now = DateTime.now();
     return products
         .where((product) {
-          final daysSinceExpired = now
-              .difference(product.expirationDate)
-              .inDays;
-          return product.expirationDate.isBefore(now) &&
-              daysSinceExpired <= days &&
-              daysSinceExpired >= 0;
+          final daysToExpire = product.expirationDate.difference(now).inDays;
+          return product.expirationDate.isAfter(now) &&
+              daysToExpire <= days &&
+              daysToExpire >= 0;
         })
         .map(
           (product) => AppNotification(
