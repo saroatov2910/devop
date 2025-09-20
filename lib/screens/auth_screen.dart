@@ -42,39 +42,21 @@ class _AuthScreenState extends State<AuthScreen> {
         email: loginEmailController.text.trim(),
         password: loginPasswordController.text.trim(),
       );
-      if (user != null) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (_) => HomeScreen(userEmail: user.email ?? "User"),
-          ),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("שגיאה בהתחברות: $e")));
-    } finally {
-      setState(() => isLoading = false);
-    }
-  }
-
-  Future<void> handleLogin() async {
-    if (!loginFormKey.currentState!.validate()) return;
-    setState(() => isLoading = true);
-    try {
-      final user = await signInUser(
-        email: loginEmailController.text.trim(),
-        password: loginPasswordController.text.trim(),
-      );
       if (user != null && mounted) {
-        // בדיקת mounted
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (_) => HomeScreen(userEmail: user.email ?? "User"),
           ),
         );
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("אימייל או סיסמה שגויים")),
+          );
+        }
       }
     } catch (e) {
+      debugPrint('Login error: $e');
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -99,7 +81,6 @@ class _AuthScreenState extends State<AuthScreen> {
         password: registerPasswordController.text.trim(),
       );
       if (user != null && mounted) {
-        // בדיקת mounted
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (_) => HomeScreen(userEmail: user.email ?? "User"),
