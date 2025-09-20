@@ -10,6 +10,7 @@ class Product {
   final DateTime expirationDate; // Expiration date of the product
   final bool checked; // Whether the product is checked/selected
   final String category; // Product category
+  final int quantity; // Product quantity
 
   // Product class constructor
   Product({
@@ -21,6 +22,7 @@ class Product {
     required this.expirationDate,
     required this.category,
     this.checked = false, // Default value for checked is false
+    required this.quantity,
   });
 
   // Returns a color based on the expiration date:
