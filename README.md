@@ -1,16 +1,28 @@
-# devop
+# Smart Fridge Manager
 
-A new Flutter project.
+A cross-platform Flutter app for managing fridge inventory, tracking product expiration, and automating product entry using AI and Raspberry Pi 5 with camera integration.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## Features
 
-A few resources to get you started if this is your first Flutter project:
+- Real-time product tracking with Firebase
+- Manual and automated (camera/barcode) product entry
+- Expiration notifications
+- AI-powered suggestions for food management
+- Integration with Raspberry Pi 5 and camera
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+---
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Folder Structure
+
+See [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) for a detailed breakdown.
+
+---
+
+## Installation
+
+```bash
+git clone <repo-url>
+cd devop
+flutter pub get
