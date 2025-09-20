@@ -22,7 +22,6 @@ class ProductListTile extends StatelessWidget {
         product.icon, // Product icon
         color: product.getExpirationColor(), // Color based on expiration
       ),
-      title: Text(product.name), // Product name
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -30,9 +29,9 @@ class ProductListTile extends StatelessWidget {
           Text("ID: ${product.id}"), // Product ID
           Text("Barcode: ${product.barcode}"), // Product barcode
           Text(
-            // Expiration date formatted as YYYY-MM-DD
             "Expires: ${product.expirationDate.toLocal().toString().split(' ')[0]}",
           ),
+          Text("Quantity: ${product.quantity}"), // Product quantity
         ],
       ),
       trailing: Checkbox(
